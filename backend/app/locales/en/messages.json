@@ -1,0 +1,53 @@
+{
+  "auth.invalid_credentials": "Invalid username or password",
+  "auth.account_locked": "Account is locked. Try again in {minutes} minutes",
+  "auth.token_expired": "Token has expired",
+  "auth.not_authenticated": "Not authenticated",
+  "auth.insufficient_permissions": "You do not have permission to perform this action",
+  "auth.missing_permissions": "Missing permissions: {permissions}",
+  "auth.password_too_weak": "Password does not meet complexity requirements",
+  "auth.user_inactive": "User account is inactive",
+
+  "journal.imbalanced": "Journal entry is not balanced: debits ({debits}) != credits ({credits})",
+  "journal.no_splits": "Journal entry must have at least two splits",
+  "journal.immutable": "Journal entries cannot be modified or deleted",
+  "journal.account_not_found": "Account not found: {code}",
+
+  "account.duplicate_code": "Account code already exists: {code}",
+  "account.not_found": "Account not found",
+  "account.has_transactions": "Cannot delete account with existing transactions",
+
+  "inventory.insufficient_stock": "Insufficient stock for {product}: available {available}, requested {requested}",
+  "inventory.product_not_found": "Product not found",
+  "inventory.duplicate_sku": "SKU already exists: {sku}",
+
+  "pos.no_active_shift": "No active shift found for this register",
+  "pos.shift_already_open": "A shift is already open on this register",
+  "pos.invalid_payment": "Payment total does not match sale total",
+
+  "fiscal.period_already_closed": "Fiscal period is already closed",
+  "fiscal.unposted_entries": "There are unposted entries in this period",
+
+  "banking.already_reconciled": "This statement line is already reconciled",
+  "banking.amount_mismatch": "Reconciliation amounts do not match",
+
+  "expense.not_found": "Expense not found",
+  "invoice.not_found": "Invoice not found",
+  "supplier.not_found": "Supplier not found",
+  "quote.not_found": "Quote not found",
+  "quote.already_converted": "Quote has already been converted to a sale",
+
+  "recurring.not_found": "Recurring entry not found",
+  "recurring.already_paused": "Recurring entry is already paused",
+
+  "report.unknown_type": "Unknown report type: {type}",
+  "report.export_started": "Report export started. You will be notified when ready.",
+
+  "validation.required": "Field '{field}' is required",
+  "validation.invalid_date": "Invalid date format",
+  "validation.positive_amount": "Amount must be positive",
+
+  "general.not_found": "Resource not found",
+  "general.server_error": "An unexpected error occurred",
+  "general.rate_limited": "Too many requests. Please try again later"
+}

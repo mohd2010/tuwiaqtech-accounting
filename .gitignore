@@ -1,0 +1,81 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+dist/
+build/
+*.egg
+.venv/
+venv/
+env/
+
+# Environment / secrets
+.env
+.env.local
+.env.*.local
+*.pem
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+nul
+
+# pytest
+.pytest_cache/
+htmlcov/
+.coverage
+
+# Node / Next.js
+node_modules/
+frontend/.next/
+frontend/out/
+frontend/.env.local
+
+# Alembic
+backend/migrations/versions/__pycache__/
+
+# Redis / Celery
+celerybeat-schedule
+dump.rdb
+
+# File uploads
+uploads/
+
+# Reference docs / binaries (not part of source)
+*.pdf
+*.xlsx
+*.zip
+*.png
+*.gif
+
+# Security test evidence
+security_evidence/
+
+# ZATCA reference docs
+zatca-apis/
+_zatca_test/
+
+# EventFlow reference docs
+events-docs/
+events-docs.zip
+
+# One-off / temp scripts at root
+cashiraccount.py
+fix_password.py
+seed_inventory.py
+seed_suppliers.py
+test_transaction.py
+verify_api.py
+2026-02-11-implement-the-following-plan.txt
+UsersmohdaOneDriveDocumentsAccounting_openapi.json
+
+# Agent skills cache
+frontend/.agents/
