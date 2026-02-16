@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 
 from backend.app.core.security import get_password_hash, verify_password
 from backend.app.models.accounting import RoleEnum, User
+from backend.app.models.permission import Role
 from backend.app.services.audit import log_action
 
 
@@ -45,10 +46,14 @@ def create_user(
     if existing:
         raise ValueError("Username already exists")
 
+    # Look up granular Role record matching the enum name
+    role_record = db.query(Role).filter(Role.name == role.value).first()
+
     user = User(
         username=username,
         hashed_password=get_password_hash(password),
         role=role,
+        role_id=role_record.id if role_record else None,
     )
     db.add(user)
     db.flush()
@@ -92,6 +97,8 @@ def update_user(
     if role is not None and role != user.role:
         changes["role"] = {"old": user.role.value, "new": role.value}
         user.role = role
+        role_record = db.query(Role).filter(Role.name == role.value).first()
+        user.role_id = role_record.id if role_record else None
 
     if changes:
         db.flush()
