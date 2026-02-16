@@ -375,7 +375,10 @@ def process_return(
 
     # ── ZATCA E-Invoice (Credit Note) ──────────────────────────────────────
     try:
-        from backend.app.services.zatca.einvoice_service import create_einvoice_for_credit_note
+        from backend.app.services.zatca.einvoice_service import (
+            create_einvoice_for_credit_note,
+            submit_einvoice_to_zatca,
+        )
 
         customer_obj = None
         if customer_id:
@@ -395,6 +398,12 @@ def process_return(
             reason=reason,
         )
         qr_code = einvoice.qr_code
+
+        # Submit to ZATCA (non-blocking for return — errors logged, not raised)
+        try:
+            submit_einvoice_to_zatca(db, einvoice)
+        except Exception:
+            pass  # Return proceeds; credit note stays PENDING for retry
     except Exception:
         # Fallback to Phase 1 QR if Organization not configured
         qr_code = generate_zatca_qr(
