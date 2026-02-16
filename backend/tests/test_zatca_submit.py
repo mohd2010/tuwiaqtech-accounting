@@ -253,7 +253,10 @@ class TestSubmitEdgeCases:
         db: Session,
         admin_token: str,
     ) -> None:
-        # No org → no credentials
+        # Remove any org so credentials are missing
+        db.query(Organization).delete()
+        db.flush()
+
         einvoice = _make_einvoice(db, invoice_number="INV-NO-CREDS")
 
         resp = client.post(
@@ -366,7 +369,10 @@ class TestComplianceCheck:
         db: Session,
         admin_token: str,
     ) -> None:
-        # Org without CSID
+        # Remove any pre-existing org, then create one without CSID
+        db.query(Organization).delete()
+        db.flush()
+
         _make_org(db, csid=None, certificate_serial=None)
         _make_einvoice(db, invoice_number="INV-COMP-002")
 

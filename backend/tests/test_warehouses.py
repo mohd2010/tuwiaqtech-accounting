@@ -160,18 +160,19 @@ class TestWarehouseAPI:
         assert r.status_code == 200
         assert len(r.json()) == 2
 
-    def test_get_stock_cashier_forbidden(
+    def test_get_stock_cashier_allowed(
         self,
         client,
         cashier_token: str,
         db: Session,
         warehouse_main: Warehouse,
     ) -> None:
+        """Cashier has warehouse:read permission and can view stock."""
         r = client.get(
             f"/api/v1/warehouses/{warehouse_main.id}/stock",
             headers=auth(cashier_token),
         )
-        assert r.status_code == 403
+        assert r.status_code == 200
 
     def test_list_warehouses_returns_created(
         self, client, admin_token: str

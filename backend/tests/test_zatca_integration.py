@@ -23,7 +23,21 @@ from backend.tests.conftest import auth
 
 @pytest.fixture()
 def organization(db: Session) -> Organization:
-    """Test organization with all required ZATCA fields."""
+    """Test organization with all required ZATCA fields (reuse existing if present)."""
+    existing = db.query(Organization).first()
+    if existing:
+        existing.name_en = "Tuwaiq Outdoor"
+        existing.name_ar = "تواق للأنشطة الخارجية"
+        existing.vat_number = "399999999999993"
+        existing.street = "King Fahd Road"
+        existing.building_number = "1234"
+        existing.city = "Riyadh"
+        existing.district = "Al Olaya"
+        existing.postal_code = "12345"
+        existing.country_code = "SA"
+        existing.cr_number = "1010123456"
+        db.flush()
+        return existing
     org = Organization(
         name_en="Tuwaiq Outdoor",
         name_ar="تواق للأنشطة الخارجية",
@@ -43,7 +57,12 @@ def organization(db: Session) -> Organization:
 
 @pytest.fixture()
 def icv_counter(db: Session) -> IcvCounter:
-    """Seed the singleton ICV counter."""
+    """Seed the singleton ICV counter (reuse existing row if present)."""
+    existing = db.query(IcvCounter).filter(IcvCounter.id == 1).first()
+    if existing:
+        existing.current_value = 0
+        db.flush()
+        return existing
     counter = IcvCounter(id=1, current_value=0)
     db.add(counter)
     db.flush()
@@ -91,6 +110,12 @@ class TestSaleCreatesEInvoice:
         admin_user: User,
     ) -> None:
         """Without org, sale should fall back to Phase 1 QR (no crash)."""
+        # Remove any existing organization so e-invoice creation falls back
+        db.query(Organization).delete()
+        db.flush()
+
+        einvoice_count_before = db.query(EInvoice).count()
+
         result = process_sale(
             db,
             items=[SaleItem(product_id=product_a.id, quantity=1)],
@@ -100,9 +125,9 @@ class TestSaleCreatesEInvoice:
         assert "qr_code" in result
         assert result["qr_code"] != ""
 
-        # No EInvoice should exist
-        count = db.query(EInvoice).count()
-        assert count == 0
+        # No new EInvoice should have been created
+        einvoice_count_after = db.query(EInvoice).count()
+        assert einvoice_count_after == einvoice_count_before
 
 
 class TestIcvSequential:
@@ -154,6 +179,10 @@ class TestPihChain:
         icv_counter: IcvCounter,
     ) -> None:
         """Each invoice's PIH should be the previous invoice's hash."""
+        # Clear pre-existing einvoices so the PIH chain starts fresh
+        db.query(EInvoice).delete()
+        db.flush()
+
         result1 = process_sale(
             db,
             items=[SaleItem(product_id=product_a.id, quantity=1)],
@@ -232,6 +261,10 @@ class TestOrganizationCrud:
         admin_token: str,
     ) -> None:
         """API create/get organization."""
+        # Clear any pre-existing organization
+        db.query(Organization).delete()
+        db.flush()
+
         org_data = {
             "name_en": "Test Corp",
             "name_ar": "شركة اختبار",

@@ -135,23 +135,41 @@ def seed_roles(db: Session) -> dict[str, Role]:
     """Create Permission, Role, and RolePermission records.
 
     Returns a dict mapping role name to Role instance.
+    Uses existing rows when available (e.g. from migrations).
     """
-    # Create permissions
+    # Create permissions (skip existing)
     perm_map: dict[str, Permission] = {}
     for code, desc, cat in _ALL_PERMISSION_CODES:
-        p = Permission(code=code, description=desc, category=cat)
-        db.add(p)
-        perm_map[code] = p
+        existing = db.query(Permission).filter(Permission.code == code).first()
+        if existing:
+            perm_map[code] = existing
+        else:
+            p = Permission(code=code, description=desc, category=cat)
+            db.add(p)
+            perm_map[code] = p
     db.flush()
 
-    # Create roles + mappings
+    # Create roles + mappings (skip existing)
     roles: dict[str, Role] = {}
     for role_name, perm_codes in _ROLE_PERMISSIONS.items():
-        role = Role(name=role_name, description=f"{role_name} role", is_system=True)
-        db.add(role)
-        db.flush()
+        existing_role = db.query(Role).filter(Role.name == role_name).first()
+        if existing_role:
+            role = existing_role
+        else:
+            role = Role(name=role_name, description=f"{role_name} role", is_system=True)
+            db.add(role)
+            db.flush()
         for code in perm_codes:
-            db.add(RolePermission(role_id=role.id, permission_id=perm_map[code].id))
+            exists = (
+                db.query(RolePermission)
+                .filter(
+                    RolePermission.role_id == role.id,
+                    RolePermission.permission_id == perm_map[code].id,
+                )
+                .first()
+            )
+            if not exists:
+                db.add(RolePermission(role_id=role.id, permission_id=perm_map[code].id))
         roles[role_name] = role
     db.flush()
     return roles

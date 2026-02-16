@@ -1,14 +1,16 @@
-"""E-Invoice orchestrator: build XML → sign → hash → store.
+"""E-Invoice orchestrator: build XML → sign → hash → store → submit.
 
 This is the main entry point called by POS and Returns services.
 """
 
 from __future__ import annotations
 
+import asyncio
 import base64
 import hashlib
+import logging
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from decimal import Decimal, ROUND_HALF_UP
 
 from lxml import etree
@@ -23,6 +25,7 @@ from backend.app.models.einvoice import (
     ZatcaSubmissionStatus,
 )
 from backend.app.models.organization import Organization
+from backend.app.services.zatca.api_client import ZatcaApiClient, ZatcaApiError
 from backend.app.services.zatca.hashing import get_initial_pih, hash_invoice_xml
 from backend.app.services.zatca.qr_code import generate_phase2_qr
 from backend.app.services.zatca.signing import (
@@ -44,6 +47,8 @@ from backend.app.services.zatca.xml_builder import (
     build_credit_note_xml,
     build_invoice_xml,
 )
+
+logger = logging.getLogger(__name__)
 
 Q = Decimal("0.0001")
 Q2 = Decimal("0.01")
@@ -429,4 +434,92 @@ def create_einvoice_for_credit_note(
     )
     db.add(einvoice)
     db.flush()
+    return einvoice
+
+
+def submit_einvoice_to_zatca(db: Session, einvoice: EInvoice) -> EInvoice:
+    """Submit an e-invoice to the ZATCA reporting/clearance API.
+
+    - B2C (SIMPLIFIED): calls reporting endpoint
+    - B2B (STANDARD): calls clearance endpoint
+
+    Updates the EInvoice record with the ZATCA response (status, request ID,
+    warnings/errors). If ZATCA returns a re-signed clearedInvoice (B2B), the
+    xml_content is updated with it.
+
+    On network or API errors the invoice is marked REJECTED with error details
+    so it can be retried later.
+    """
+    org = _get_organization(db)
+    if not org.csid or not org.certificate_serial:
+        logger.warning("ZATCA credentials not configured — skipping submission for %s", einvoice.invoice_number)
+        return einvoice
+
+    client = ZatcaApiClient(org)
+    xml_b64 = base64.b64encode(einvoice.xml_content).decode("ascii")
+
+    try:
+        if einvoice.sub_type == InvoiceSubType.SIMPLIFIED:
+            result = asyncio.run(
+                client.report_simplified_invoice(
+                    einvoice.invoice_hash, einvoice.invoice_uuid, xml_b64
+                )
+            )
+        else:
+            result = asyncio.run(
+                client.clear_standard_invoice(
+                    einvoice.invoice_hash, einvoice.invoice_uuid, xml_b64
+                )
+            )
+    except (ZatcaApiError, Exception) as exc:
+        logger.error("ZATCA submission failed for %s: %s", einvoice.invoice_number, exc)
+        einvoice.submission_status = ZatcaSubmissionStatus.REJECTED
+        einvoice.zatca_errors = {"error": str(exc)}
+        einvoice.submitted_at = datetime.now(timezone.utc)
+        db.flush()
+        return einvoice
+
+    # Parse ZATCA response
+    reporting_status = result.get("reportingStatus")
+    clearance_status = result.get("clearanceStatus")
+    validation_results = result.get("validationResults", {})
+    request_id = str(result.get("requestID", "")) if result.get("requestID") is not None else None
+
+    einvoice.zatca_request_id = request_id
+    einvoice.zatca_reporting_status = reporting_status
+    einvoice.zatca_clearance_status = clearance_status
+    einvoice.submitted_at = datetime.now(timezone.utc)
+
+    # Store warnings and errors from validationResults
+    warnings_list = validation_results.get("warningMessages", [])
+    errors_list = validation_results.get("errorMessages", [])
+    if warnings_list:
+        einvoice.zatca_warnings = {"warnings": warnings_list}
+    if errors_list:
+        einvoice.zatca_errors = {"errors": errors_list}
+
+    # Determine submission status from response
+    if clearance_status == "CLEARED":
+        einvoice.submission_status = ZatcaSubmissionStatus.CLEARED
+        # B2B clearance: ZATCA may return a re-signed invoice
+        cleared_invoice_b64 = result.get("clearedInvoice")
+        if cleared_invoice_b64:
+            einvoice.xml_content = base64.b64decode(cleared_invoice_b64)
+    elif reporting_status == "REPORTED":
+        einvoice.submission_status = ZatcaSubmissionStatus.REPORTED
+    elif reporting_status == "NOT_REPORTED" or clearance_status == "NOT_CLEARED":
+        einvoice.submission_status = ZatcaSubmissionStatus.REJECTED
+    elif warnings_list and not errors_list:
+        einvoice.submission_status = ZatcaSubmissionStatus.WARNING
+    else:
+        # Any other unexpected status — mark as rejected for safety
+        einvoice.submission_status = ZatcaSubmissionStatus.REJECTED
+
+    db.flush()
+    logger.info(
+        "ZATCA submission for %s: status=%s, request_id=%s",
+        einvoice.invoice_number,
+        einvoice.submission_status.value,
+        request_id,
+    )
     return einvoice

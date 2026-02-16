@@ -303,7 +303,10 @@ def process_sale(
 
     # ── ZATCA E-Invoice ────────────────────────────────────────────────────
     try:
-        from backend.app.services.zatca.einvoice_service import create_einvoice_for_sale
+        from backend.app.services.zatca.einvoice_service import (
+            create_einvoice_for_sale,
+            submit_einvoice_to_zatca,
+        )
 
         customer_obj = None
         if customer_id:
@@ -322,6 +325,12 @@ def process_sale(
             now=now,
         )
         qr_code = einvoice.qr_code
+
+        # Submit to ZATCA (non-blocking for sale — errors logged, not raised)
+        try:
+            submit_einvoice_to_zatca(db, einvoice)
+        except Exception:
+            pass  # Sale proceeds; invoice stays PENDING for retry
     except Exception:
         # Fallback to Phase 1 QR if Organization not configured
         qr_code = generate_zatca_qr(
