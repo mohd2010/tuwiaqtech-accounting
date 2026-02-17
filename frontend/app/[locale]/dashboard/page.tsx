@@ -423,7 +423,7 @@ function AnalyticsView() {
                     tickLine={false}
                   />
                   <Tooltip
-                    formatter={(v: number) => [`${fmt(v)} SAR`]}
+                    formatter={(v) => [`${fmt(Number(v ?? 0))} SAR`]}
                   />
                   <Bar dataKey="total" fill="hsl(221, 83%, 53%)" radius={[0, 4, 4, 0]} />
                 </BarChart>
@@ -466,7 +466,7 @@ function AnalyticsView() {
                     ))}
                   </Pie>
                   <Tooltip
-                    formatter={(v: number) => [`${fmt(v)} SAR`]}
+                    formatter={(v) => [`${fmt(Number(v ?? 0))} SAR`]}
                   />
                   <Legend />
                 </PieChart>
