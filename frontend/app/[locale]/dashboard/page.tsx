@@ -377,8 +377,8 @@ function AnalyticsView() {
                 <XAxis dataKey="date" fontSize={12} />
                 <YAxis fontSize={12} tickFormatter={(v) => fmt(v)} />
                 <Tooltip
-                  formatter={(v: number, name: string) => [
-                    `${fmt(v)} SAR`,
+                  formatter={(v: number | undefined, name: string) => [
+                    `${fmt(v ?? 0)} SAR`,
                     name === "revenue" ? t("revenue") : t("expenses"),
                   ]}
                 />
