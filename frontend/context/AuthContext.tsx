@@ -12,6 +12,14 @@ import { useRouter } from "@/i18n/navigation";
 import Cookies from "js-cookie";
 import api from "@/lib/api";
 
+interface UserApi {
+  id: string;
+  username: string;
+  role: string;
+  permissions: string[];
+  org_configured?: boolean;
+}
+
 interface User {
   id: string;
   username: string;
@@ -42,11 +50,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
     try {
-      const res = await api.get<User>("/api/v1/users/me");
+      const res = await api.get<UserApi>("/api/v1/users/me");
       setUser({
-        ...res.data,
+        id: res.data.id,
+        username: res.data.username,
+        role: res.data.role,
         permissions: res.data.permissions ?? [],
-        orgConfigured: (res.data as Record<string, unknown>).org_configured === true,
+        orgConfigured: res.data.org_configured === true,
       });
     } catch {
       localStorage.removeItem("access_token");
