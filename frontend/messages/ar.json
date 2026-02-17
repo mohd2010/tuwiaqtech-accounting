@@ -259,7 +259,7 @@
     "failedToAdd": "فشل في إضافة المخزون."
   },
   "journalPage": {
-    "title": "دفتر اليومية العام",
+    "title": "القيود المحاسبية",
     "date": "التاريخ",
     "description": "الوصف",
     "ref": "المرجع",
@@ -267,7 +267,26 @@
     "noEntries": "لا توجد قيود محاسبية بعد.",
     "account": "الحساب",
     "debit": "مدين",
-    "credit": "دائن"
+    "credit": "دائن",
+    "entryNumber": "رقم القيد",
+    "status": "الحالة",
+    "transactionType": "نوع العملية",
+    "referenceNumber": "رقم المرجع",
+    "location": "الموقع",
+    "notes": "ملاحظات",
+    "actions": "الإجراءات",
+    "posted": "مرحّل",
+    "searchPlaceholder": "بحث برقم القيد أو المرجع أو الملاحظات",
+    "filters": "تصفية",
+    "sortBy": "ترتيب حسب",
+    "newestFirst": "تاريخ الإنشاء: الأحدث أولاً",
+    "oldestFirst": "تاريخ الإنشاء: الأقدم أولاً",
+    "newJournalEntry": "قيد جديد",
+    "noOfResults": "عدد النتائج",
+    "showing": "عرض",
+    "of": "من",
+    "view": "عرض",
+    "print": "طباعة"
   },
   "suppliers": {
     "title": "الموردون",

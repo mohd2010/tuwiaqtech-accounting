@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Link, usePathname, useRouter } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import {
@@ -27,6 +27,8 @@ import {
   Users,
   Lock,
   Repeat,
+  ChevronRight,
+  ChevronDown,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { cn } from "@/lib/utils";
@@ -44,6 +46,7 @@ interface NavItem {
 
 interface NavGroup {
   heading: string;
+  icon: React.ComponentType<{ className?: string }>;
   items: NavItem[];
 }
 
@@ -94,6 +97,7 @@ export default function DashboardLayout({
     { href: "/dashboard", label: t("dashboard"), icon: LayoutDashboard },
     {
       heading: t("inventory"),
+      icon: Package,
       items: [
         { href: "/dashboard/inventory", label: t("inventory"), icon: Package, permission: "inventory:read" },
         { href: "/dashboard/inventory/adjustments", label: t("adjustments"), icon: ClipboardMinus, permission: "inventory:adjust" },
@@ -103,6 +107,7 @@ export default function DashboardLayout({
     },
     {
       heading: t("accounting"),
+      icon: BookOpen,
       items: [
         { href: "/dashboard/journal", label: t("journal"), icon: BookOpen, permission: "journal:read" },
         { href: "/dashboard/accounts", label: t("chartOfAccounts"), icon: Landmark, permission: "account:read" },
@@ -114,6 +119,7 @@ export default function DashboardLayout({
     { href: "/dashboard/expenses", label: t("expenses"), icon: Receipt, permission: "expense:read" },
     {
       heading: t("pos"),
+      icon: ShoppingCart,
       items: [
         { href: "/dashboard/pos", label: t("pos"), icon: ShoppingCart, permission: "pos:sale" },
         { href: "/dashboard/pos/returns", label: t("returns"), icon: RotateCcw, permission: "returns:process" },
@@ -124,18 +130,21 @@ export default function DashboardLayout({
     { href: "/dashboard/quotes", label: t("quotes"), icon: FileCheck, permission: "quote:read" },
     {
       heading: t("banking"),
+      icon: Building2,
       items: [
         { href: "/dashboard/banking", label: t("bankReconciliation"), icon: Building2, permission: "banking:read" },
       ],
     },
     {
       heading: t("receivables"),
+      icon: FileText,
       items: [
         { href: "/dashboard/invoices", label: t("creditInvoices"), icon: FileText, permission: "invoice:read" },
       ],
     },
     {
       heading: t("supplyChain"),
+      icon: Truck,
       items: [
         { href: "/dashboard/suppliers", label: t("suppliers"), icon: Truck, permission: "supplier:read" },
         { href: "/dashboard/purchase-orders", label: t("purchaseOrders"), icon: ClipboardCheck, permission: "purchase:read" },
@@ -144,18 +153,21 @@ export default function DashboardLayout({
     },
     {
       heading: t("zatca"),
+      icon: FileCheck,
       items: [
         { href: "/dashboard/einvoices", label: t("eInvoices"), icon: FileCheck, permission: "einvoice:read" },
       ],
     },
     {
       heading: t("userManagement"),
+      icon: Users,
       items: [
         { href: "/dashboard/users", label: t("users"), icon: Users, permission: "user:manage" },
       ],
     },
     {
       heading: t("reports"),
+      icon: ClipboardList,
       items: [
         { href: "/dashboard/reports/income-statement", label: t("incomeStatement"), icon: FileText, permission: "report:read" },
         { href: "/dashboard/reports/balance-sheet", label: t("balanceSheet"), icon: Scale, permission: "report:read" },
@@ -179,6 +191,43 @@ export default function DashboardLayout({
     }
     return hasPermission(section.permission) ? section : null;
   }).filter(Boolean) as (NavItem | NavGroup)[];
+
+  // ── Collapsible sidebar groups ──────────────────────────────────────────
+  // Auto-expand groups that contain the active route
+  const activeGroups = useMemo(() => {
+    const active = new Set<string>();
+    for (const section of navSections) {
+      if (isGroup(section)) {
+        const hasActive = section.items.some((item) => {
+          if (item.href === "/dashboard/inventory" || item.href === "/dashboard/pos")
+            return pathname === item.href;
+          return pathname.startsWith(item.href);
+        });
+        if (hasActive) active.add(section.heading);
+      }
+    }
+    return active;
+  }, [navSections, pathname]);
+
+  const [openGroups, setOpenGroups] = useState<Set<string>>(new Set());
+
+  // Sync open groups when active route changes (auto-expand active group)
+  useEffect(() => {
+    setOpenGroups((prev) => {
+      const next = new Set(prev);
+      for (const g of activeGroups) next.add(g);
+      return next.size !== prev.size ? next : prev;
+    });
+  }, [activeGroups]);
+
+  const toggleGroup = (heading: string) => {
+    setOpenGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(heading)) next.delete(heading);
+      else next.add(heading);
+      return next;
+    });
+  };
 
   // ── Route guard: redirect if user lacks permission for current route ────
   useEffect(() => {
@@ -236,17 +285,36 @@ export default function DashboardLayout({
           </p>
         </div>
 
-        <nav className="flex-1 space-y-1 overflow-auto px-2 py-3">
+        <nav className="flex-1 space-y-0.5 overflow-auto px-2 py-3">
           {navSections.map((section) => {
             if (isGroup(section)) {
+              const isOpen = openGroups.has(section.heading);
+              const GroupIcon = section.icon;
+              const hasActiveChild = activeGroups.has(section.heading);
               return (
-                <div key={section.heading} className="mt-4">
-                  <p className="mb-1 px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    {section.heading}
-                  </p>
-                  <div className="space-y-0.5">
-                    {section.items.map(renderLink)}
-                  </div>
+                <div key={section.heading} className="mt-1">
+                  <button
+                    onClick={() => toggleGroup(section.heading)}
+                    className={cn(
+                      "flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                      hasActiveChild
+                        ? "text-sidebar-accent-foreground"
+                        : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground",
+                    )}
+                  >
+                    <GroupIcon className="size-4 shrink-0" />
+                    <span className="flex-1 text-start truncate">{section.heading}</span>
+                    {isOpen ? (
+                      <ChevronDown className="size-3.5 shrink-0 text-muted-foreground" />
+                    ) : (
+                      <ChevronRight className="size-3.5 shrink-0 text-muted-foreground" />
+                    )}
+                  </button>
+                  {isOpen && (
+                    <div className="mt-0.5 space-y-0.5 ltr:ml-4 rtl:mr-4">
+                      {section.items.map(renderLink)}
+                    </div>
+                  )}
                 </div>
               );
             }

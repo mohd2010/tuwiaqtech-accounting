@@ -73,3 +73,8 @@ class JournalEntryOut(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class PaginatedJournalResponse(BaseModel):
+    items: list[JournalEntryOut]
+    total: int

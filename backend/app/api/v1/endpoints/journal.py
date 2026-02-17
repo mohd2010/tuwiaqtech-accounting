@@ -1,12 +1,16 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from backend.app.api.permission_deps import require_permission
 from backend.app.core.database import get_db
 from backend.app.models.accounting import Account, JournalEntry, User
-from backend.app.schemas.accounting import JournalEntryCreate, JournalEntryOut
+from backend.app.schemas.accounting import (
+    JournalEntryCreate,
+    PaginatedJournalResponse,
+)
 from backend.app.services.journal import create_journal_entry
 
 router = APIRouter()
@@ -29,16 +33,37 @@ def list_accounts(
     ]
 
 
-@router.get("/entries", response_model=list[JournalEntryOut])
+@router.get("/entries", response_model=PaginatedJournalResponse)
 def list_entries(
     db: Session = Depends(get_db),
     _current_user: User = Depends(require_permission("journal:read")),
-) -> list[JournalEntry]:
-    return (
-        db.query(JournalEntry)
-        .order_by(JournalEntry.created_at.desc())
-        .all()
-    )
+    page: int = Query(1, ge=1),
+    page_size: int = Query(10, ge=1, le=100),
+    search: str = Query("", max_length=200),
+    sort: str = Query("newest", pattern="^(newest|oldest)$"),
+) -> dict:
+    query = db.query(JournalEntry)
+
+    if search.strip():
+        term = f"%{search.strip()}%"
+        query = query.filter(
+            or_(
+                JournalEntry.description.ilike(term),
+                JournalEntry.reference.ilike(term),
+            )
+        )
+
+    total = query.count()
+
+    if sort == "oldest":
+        query = query.order_by(JournalEntry.created_at.asc())
+    else:
+        query = query.order_by(JournalEntry.created_at.desc())
+
+    offset = (page - 1) * page_size
+    items = query.offset(offset).limit(page_size).all()
+
+    return {"items": items, "total": total}
 
 
 @router.post("/entries")

@@ -259,7 +259,7 @@
     "failedToAdd": "Failed to add stock."
   },
   "journalPage": {
-    "title": "General Journal",
+    "title": "Journal Entries",
     "date": "Date",
     "description": "Description",
     "ref": "Ref",
@@ -267,7 +267,26 @@
     "noEntries": "No journal entries yet.",
     "account": "Account",
     "debit": "Debit",
-    "credit": "Credit"
+    "credit": "Credit",
+    "entryNumber": "Entry Number",
+    "status": "Status",
+    "transactionType": "Transaction Type",
+    "referenceNumber": "Reference Number",
+    "location": "Location(s)",
+    "notes": "Notes",
+    "actions": "Actions",
+    "posted": "Posted",
+    "searchPlaceholder": "Search by Entry, Reference ID or Notes",
+    "filters": "Filters",
+    "sortBy": "Sort By",
+    "newestFirst": "Creation Date: Newest first",
+    "oldestFirst": "Creation Date: Oldest first",
+    "newJournalEntry": "New Journal Entry",
+    "noOfResults": "No. of Results",
+    "showing": "Showing",
+    "of": "of",
+    "view": "View",
+    "print": "Print"
   },
   "suppliers": {
     "title": "Suppliers",
