@@ -11,6 +11,7 @@ from backend.app.api.permission_deps import require_permission
 from backend.app.core.database import get_db
 from backend.app.core.security import validate_password_strength
 from backend.app.models.accounting import RoleEnum, User
+from backend.app.models.organization import Organization
 from backend.app.services.user_management import (
     change_own_password,
     create_user,
@@ -32,6 +33,7 @@ class UserOut(BaseModel):
     role: str
     is_active: bool
     permissions: list[str] = []
+    org_configured: bool = False
 
     class Config:
         from_attributes = True
@@ -93,12 +95,14 @@ def read_current_user(
 ) -> dict:
     from backend.app.api.permission_deps import _load_user_permissions
     perms = sorted(_load_user_permissions(db, current_user))
+    org_configured = db.query(Organization.id).first() is not None
     return {
         "id": current_user.id,
         "username": current_user.username,
         "role": current_user.role.value,
         "is_active": current_user.is_active,
         "permissions": perms,
+        "org_configured": org_configured,
     }
 
 

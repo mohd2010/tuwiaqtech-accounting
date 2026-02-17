@@ -35,7 +35,7 @@ import LanguageSwitcher from "@/components/LanguageSwitcher";
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 interface NavItem {
-  href: "/dashboard" | "/dashboard/inventory" | "/dashboard/inventory/adjustments" | "/dashboard/inventory/warehouses" | "/dashboard/inventory/transfers" | "/dashboard/journal" | "/dashboard/accounts" | "/dashboard/pos" | "/dashboard/pos/returns" | "/dashboard/pos/shifts" | "/dashboard/expenses" | "/dashboard/sales" | "/dashboard/quotes" | "/dashboard/suppliers" | "/dashboard/purchase-orders" | "/dashboard/purchase-returns" | "/dashboard/reports/income-statement" | "/dashboard/reports/balance-sheet" | "/dashboard/reports/trial-balance" | "/dashboard/reports/general-ledger" | "/dashboard/reports/vat-report" | "/dashboard/reports/cash-flow" | "/dashboard/reports/ar-aging" | "/dashboard/reports/ap-aging" | "/dashboard/reports/valuation" | "/dashboard/banking" | "/dashboard/invoices" | "/dashboard/users" | "/dashboard/fiscal-close" | "/dashboard/recurring" | "/dashboard/settings" | "/dashboard/einvoices";
+  href: "/dashboard" | "/dashboard/inventory" | "/dashboard/inventory/adjustments" | "/dashboard/inventory/warehouses" | "/dashboard/inventory/transfers" | "/dashboard/journal" | "/dashboard/accounts" | "/dashboard/pos" | "/dashboard/pos/returns" | "/dashboard/pos/shifts" | "/dashboard/expenses" | "/dashboard/sales" | "/dashboard/quotes" | "/dashboard/suppliers" | "/dashboard/purchase-orders" | "/dashboard/purchase-returns" | "/dashboard/reports/income-statement" | "/dashboard/reports/balance-sheet" | "/dashboard/reports/trial-balance" | "/dashboard/reports/general-ledger" | "/dashboard/reports/vat-report" | "/dashboard/reports/cash-flow" | "/dashboard/reports/ar-aging" | "/dashboard/reports/ap-aging" | "/dashboard/reports/valuation" | "/dashboard/banking" | "/dashboard/invoices" | "/dashboard/users" | "/dashboard/fiscal-close" | "/dashboard/recurring" | "/dashboard/settings" | "/dashboard/einvoices" | "/dashboard/setup";
   label: string;
   icon: React.ComponentType<{ className?: string }>;
   /** Permission code(s) required — item hidden if user lacks any */
@@ -189,6 +189,14 @@ export default function DashboardLayout({
       }
     }
   }, [userPerms, pathname, router]);
+
+  // ── Onboarding guard: redirect to setup wizard if org not configured ────
+  useEffect(() => {
+    if (!user) return;
+    if (!user.orgConfigured && pathname !== "/dashboard/setup") {
+      router.replace("/dashboard/setup");
+    }
+  }, [user, pathname, router]);
 
   const renderLink = (item: NavItem) => {
     const isActive =

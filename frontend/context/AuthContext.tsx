@@ -17,6 +17,7 @@ interface User {
   username: string;
   role: string;
   permissions: string[];
+  orgConfigured: boolean;
 }
 
 interface AuthContextValue {
@@ -24,6 +25,7 @@ interface AuthContextValue {
   loading: boolean;
   login: (username: string, password: string) => Promise<void>;
   logout: () => void;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -44,6 +46,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser({
         ...res.data,
         permissions: res.data.permissions ?? [],
+        orgConfigured: (res.data as Record<string, unknown>).org_configured === true,
       });
     } catch {
       localStorage.removeItem("access_token");
@@ -85,8 +88,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [router]);
 
   const value = useMemo(
-    () => ({ user, loading, login, logout }),
-    [user, loading, login, logout],
+    () => ({ user, loading, login, logout, refreshUser: loadUser }),
+    [user, loading, login, logout, loadUser],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
