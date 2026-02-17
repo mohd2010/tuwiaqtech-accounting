@@ -144,7 +144,7 @@ def seed() -> None:
         # ── Admin user ─────────────────────────────────────────────────
         admin = db.query(User).filter_by(username="admin").first()
         if admin:
-            admin.hashed_password = get_password_hash("admin123")
+            admin.hashed_password = get_password_hash("Tuwaiq@Admin2026!")
             if admin.role_id is None:
                 admin.role_id = roles["ADMIN"].id
                 print("Assigned ADMIN role to admin user.")
@@ -153,7 +153,7 @@ def seed() -> None:
             db.add(
                 User(
                     username="admin",
-                    hashed_password=get_password_hash("admin123"),
+                    hashed_password=get_password_hash("Tuwaiq@Admin2026!"),
                     role=RoleEnum.ADMIN,
                     role_id=roles["ADMIN"].id,
                 )
