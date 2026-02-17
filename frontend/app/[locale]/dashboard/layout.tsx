@@ -190,13 +190,8 @@ export default function DashboardLayout({
     }
   }, [userPerms, pathname, router]);
 
-  // ── Onboarding guard: redirect to setup wizard if org not configured ────
-  useEffect(() => {
-    if (!user) return;
-    if (!user.orgConfigured && pathname !== "/dashboard/setup") {
-      router.replace("/dashboard/setup");
-    }
-  }, [user, pathname, router]);
+  // ── Onboarding banner: show setup link if org not configured ────
+  const showSetupBanner = user && !user.orgConfigured && pathname !== "/dashboard/setup";
 
   const renderLink = (item: NavItem) => {
     const isActive =
@@ -273,6 +268,19 @@ export default function DashboardLayout({
 
       {/* Main content */}
       <main className="flex-1 overflow-auto bg-background p-6">
+        {showSetupBanner && (
+          <div className="mb-4 flex items-center justify-between rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm dark:border-amber-800 dark:bg-amber-950">
+            <span className="text-amber-800 dark:text-amber-200">
+              {t("setupBanner")}
+            </span>
+            <Link
+              href="/dashboard/setup"
+              className="rounded-md bg-amber-600 px-3 py-1 text-xs font-medium text-white hover:bg-amber-700"
+            >
+              {t("setupNow")}
+            </Link>
+          </div>
+        )}
         {children}
       </main>
     </div>

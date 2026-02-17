@@ -53,7 +53,9 @@
     "purchaseReturns": "Purchase Returns",
     "organizationSettings": "Organization",
     "zatca": "ZATCA",
-    "eInvoices": "E-Invoices"
+    "eInvoices": "E-Invoices",
+    "setupBanner": "Organization setup is not complete. Configure your company details for ZATCA compliance.",
+    "setupNow": "Set up now"
   },
   "languageSwitcher": {
     "label": "العربية"
@@ -1108,7 +1110,8 @@
     "setupFailed": "Failed to save. Please check your inputs.",
     "step": "Step {current} of {total}",
     "noPermission": "Please ask your administrator to complete the organization setup.",
-    "waitingSetup": "Organization setup is required before you can use the system."
+    "waitingSetup": "Organization setup is required before you can use the system.",
+    "skipForNow": "Skip for now"
   },
   "einvoices": {
     "title": "E-Invoices",

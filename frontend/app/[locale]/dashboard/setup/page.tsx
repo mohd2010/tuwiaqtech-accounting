@@ -123,6 +123,14 @@ export default function SetupPage() {
       <div className="text-center">
         <h1 className="text-2xl font-bold">{t("title")}</h1>
         <p className="mt-1 text-muted-foreground">{t("subtitle")}</p>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="mt-2 text-muted-foreground"
+          onClick={() => router.push("/dashboard")}
+        >
+          {t("skipForNow")}
+        </Button>
       </div>
 
       {/* Step indicator */}
