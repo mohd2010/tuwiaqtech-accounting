@@ -10,6 +10,7 @@ from backend.app.core.database import SessionLocal
 from backend.app.core.security import get_password_hash
 from backend.app.models.accounting import Account, AccountType, RoleEnum, User
 from backend.app.models.inventory import Warehouse
+from backend.app.models.permission import Role  # noqa: F401 — needed for User.assigned_role relationship
 from backend.app.models.pos import Register
 
 ACCOUNTS: list[tuple[str, str, AccountType]] = [
